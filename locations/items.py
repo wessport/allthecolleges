@@ -23,4 +23,5 @@ class AddressItem(scrapy.Item):
     state = scrapy.Field()
     postcode = scrapy.Field()
     ref = scrapy.Field()
+    website = scrapy.Field()
     extras = scrapy.Field()
