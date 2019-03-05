@@ -6,12 +6,12 @@ from locations.items import AddressItem
 
 
 class CollegeStatsSpider(scrapy.Spider):
-    download_delay = 1
+    download_delay = 0.5
     download_maxsize = 0
     name = "collegestats"
     allowed_domains = ["collegestats.org"]
     start_urls = (
-        'https://collegestats.org/colleges/all/',
+        'https://collegestats.org/colleges/all/?pg=60',
     )
 
     def parse(self, response):
@@ -20,20 +20,26 @@ class CollegeStatsSpider(scrapy.Spider):
         for school in schools:
             school_id = school.xpath('@data-school-id').extract_first()
             school_name = school.xpath('.//div[@class="name-location"]/p/text()').extract_first()
-            base_url = 'https://collegestats.org/college'
-            url = base_url + '/' + school_id + '-' + school_name.replace(' ', '-')
 
-            request = scrapy.Request(url, callback=self.parse_school_details)
-            # Collecting the college info on the college list page which is structured better
-            # Carry this data as metadata to make it available to the subsequent school details parser
-            request.meta['school_id'] = school.xpath('@data-school-id').extract_first()
-            request.meta['name'] = school.xpath('.//div[@class="name-location"]/p/text()').extract_first()
-            request.meta['street_address'] = school.xpath('.//meta[@itemprop="streetAddress"]/@content').extract_first()
-            request.meta['city'] = school.xpath('.//meta[@itemprop="addressLocality"]/@content').extract_first()
-            request.meta['state'] = school.xpath('.//meta[@itemprop="addressRegion"]/@content').extract_first()
-            request.meta['postcode'] = school.xpath('.//meta[@itemprop="postalCode"]/@content').extract_first()
+            if school_name is not None:
+                base_url = 'https://collegestats.org/college'
+                url = base_url + '/' + school_id + '-' + school_name.replace(' ', '-')
 
-            yield request
+                request = scrapy.Request(url, callback=self.parse_school_details)
+
+                # Collecting the college info on the college list page which is structured better
+                # Carry this data as metadata to make it available to the subsequent school details parser
+                request.meta['school_id'] = school.xpath('@data-school-id').extract_first()
+                request.meta['name'] = school.xpath('.//div[@class="name-location"]/p/text()').extract_first()
+                request.meta['street_address'] = school.xpath('.//meta[@itemprop="streetAddress"]/@content').extract_first()
+                request.meta['city'] = school.xpath('.//meta[@itemprop="addressLocality"]/@content').extract_first()
+                request.meta['state'] = school.xpath('.//meta[@itemprop="addressRegion"]/@content').extract_first()
+                request.meta['postcode'] = school.xpath('.//meta[@itemprop="postalCode"]/@content').extract_first()
+
+                yield request
+
+            else:
+                continue
 
         next_page_url = response.xpath('//ol[@class="pagination"]/li[position() = (last()-1)]/a/@href').extract_first()
         if next_page_url is not None:
