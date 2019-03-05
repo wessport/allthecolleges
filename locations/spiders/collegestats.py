@@ -8,9 +8,11 @@ from locations.items import AddressItem
 class CollegeStatsSpider(scrapy.Spider):
     download_delay = 0.5
     download_maxsize = 0
+    handle_httpstatus_list = [404]
     name = "collegestats"
     allowed_domains = ["collegestats.org"]
     start_urls = (
+        # 'https://collegestats.org/colleges/all/'
         'https://collegestats.org/colleges/all/',
     )
 
@@ -48,6 +50,12 @@ class CollegeStatsSpider(scrapy.Spider):
     def parse_school_details(self, elements):
         ref = re.search(r'.+/(.+)', elements.url).group(1)
 
+        # Handle 404 status if encountered for school detail page
+        if elements.status == 404:
+            website = None
+        else:
+            website = elements.xpath('//section[@class="content school"]/button/a/@href').extract_first()
+
         items = {
             'ref': ref,
             'school_id': elements.meta['school_id'],
@@ -56,7 +64,7 @@ class CollegeStatsSpider(scrapy.Spider):
             'city': elements.meta['city'],
             'state': elements.meta['state'],
             'postcode': elements.meta['postcode'],
-            'website': elements.xpath('//section[@class="content school"]/button/a/@href').extract_first()
+            'website': website
         }
 
         yield AddressItem(**items)
