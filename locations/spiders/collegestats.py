@@ -11,7 +11,7 @@ class CollegeStatsSpider(scrapy.Spider):
     name = "collegestats"
     allowed_domains = ["collegestats.org"]
     start_urls = (
-        'https://collegestats.org/colleges/all/?pg=60',
+        'https://collegestats.org/colleges/all/',
     )
 
     def parse(self, response):
