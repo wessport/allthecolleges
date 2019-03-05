@@ -1,2 +1,2 @@
 # allthecolleges
-A collection of US college addresses
+A project to scrape all the US college addresses.
